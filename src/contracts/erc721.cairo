@@ -11,17 +11,6 @@ mod ERC721{
     use prezent_contract_starknet::interface::IERC721;
     use prezent_contract_starknet::ERC165;
 
-
-    /////////////////////
-    // Dispatchers
-    ////////////////////
-
-
-    // use simple_contract::interface::IERC721ReceiverDispatcher;
-    // // use simple_contract::interface::IERC721ReceiverDispatcherTrait;
-    // use simple_contract::interface::IERC165Dispatcher;
-    // use simple_contract::interface::IERC165DispatcherTrait;
-
     ////////////////////
     // Others
     ///////////////////
