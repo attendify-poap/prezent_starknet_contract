@@ -21,12 +21,12 @@ fn owner_of(token_id:u256) -> ContractAddress;
 // IERC721Receiver interfcae
 //////////////////////
 
-#[abi]
-trait IERC721Receiver {
-    fn on_erc721_received(
-        operator: ContractAddress, from: ContractAddress, token_id: u256, data: Span<felt252>
-    ) -> u32;
-}
+// #[abi]
+// trait IERC721Receiver {
+//     fn on_erc721_received(
+//         operator: ContractAddress, from: ContractAddress, token_id: u256, data: Span<felt252>
+//     ) -> u32;
+// }
 
 /////////////////
 // supports_interface_id

@@ -1,6 +1,6 @@
 #[contract]
 
-
+// note: contract did not implement some functionalities such as transfer, approve as token is meant to be soulbound.
 
 mod ERC721{
 
