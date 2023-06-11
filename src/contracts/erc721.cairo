@@ -1,7 +1,12 @@
-#[contract]
+const IERC165_ID: u32 = 0x01ffc9a7_u32;
+const INVALID_ID: u32 = 0xffffffff_u32;
+const IERC721_ID: u32 = 0x80ac58cd_u32;
+const IERC721_METADATA_ID: u32 = 0x5b5e139f_u32;
+
 
 // note: contract did not implement some functionalities such as transfer, approve as token is meant to be soulbound.
 
+#[contract]
 mod ERC721{
 
 
@@ -9,7 +14,6 @@ mod ERC721{
     // Module Imports
     ///////////////////
     use prezent_contract_starknet::interface::IERC721;
-    use prezent_contract_starknet::ERC165;
 
     ////////////////////
     // Others
@@ -32,11 +36,15 @@ mod ERC721{
     _owners: LegacyMap::<u256, ContractAddress>,
     _balances: LegacyMap::<ContractAddress, u256>,
     _tokenId:u256,
-    _hasClaimed: <ContractAddress, bool>,
+    _hasClaimed:LegacyMap::<ContractAddress, bool>,
     _token_uri: LegacyMap::<u256, felt252>,
     _current_prezent_amount:u256,
     _prezent_mint_limit:u256,
+    _supported_interfaces:LegacyMap<u32,bool>,
     }
+
+   #[event]
+    fn Transfer(from: ContractAddress, to: ContractAddress, token_id: u256) {}
 
     /////////////////////
     // IERC721 implementation
@@ -106,7 +114,7 @@ mod ERC721{
     #[view]
 
     fn supports_interface(interface_id:u32) -> bool{
-    return ERC165::supports_interface(interface_id);
+    return _supported_interfaces::read(interface_id);
     }
 
     #[view]
@@ -155,8 +163,8 @@ mod ERC721{
         _event_uri::write(event_uri_);
         _creator::write(caller);
         _prezent_mint_limit::write(prezent_mint_limit);
-        ERC165::register_interface(interface::IERC721_ID);
-        ERC165::register_interface(interface::IERC721_METADATA_ID);
+        register_interface(super::IERC721_ID);
+        register_interface(super::IERC721_METADATA_ID);
     }
 
      #[internal]
@@ -194,6 +202,17 @@ mod ERC721{
         _token_uri::write(token_id, token_uri)
     }
 
+    #[internal]
+    fn register_interface(interface_id: u32) {
+        assert(interface_id != super::INVALID_ID, 'Invalid id');
+        _supported_interfaces::write(interface_id, true);
+    }
+
+    #[internal]
+    fn deregister_interface(interface_id: u32) {
+        assert(interface_id != super::IERC165_ID, 'Invalid id');
+        _supported_interfaces::write(interface_id, false);
+    }
 
     #[external]
     fn safemint(to: ContractAddress) {
@@ -214,7 +233,7 @@ mod ERC721{
     let msgSender = get_caller_address();
     assert(!msgSender.is_zero(), 'CALLER_ZERO_ADDRESS');
     assert(_hasClaimed::read(msgSender) == false, 'ALREADY CLAIM');
-    _safemint(msgSender);
+    safemint(msgSender);
     _hasClaimed::write(msgSender, true);
     }
 
