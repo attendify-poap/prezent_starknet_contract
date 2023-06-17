@@ -90,19 +90,16 @@ address
     }
 
 
-
 fn setup_declare() -> felt252{
-let class_hash = declare('prezent').unwrap();
-class_hash
+let class_hash = declare('deployer').unwrap();
+ class_hash
 }
 
 #[test]
 fn test_factory_deploy() {
 let class_hash = setup_declare();
-let contract_address = __set__up();
 let mut calldata = ArrayTrait::new();
 let mint_limit = u256 {low: 5, high: 0};
-calldata.append(class_hash);
 calldata.append(name_deploy);
 calldata.append(symbol_deploy);
 calldata.append(event_uri_deploy);
@@ -110,7 +107,10 @@ calldata.append(user3);
 calldata.append(mint_limit.high.into());
 calldata.append(mint_limit.low.into());
 
-let retdeploy = call(contract_address, 'deploy_factory', @calldata).unwrap();
+let prepared_result = prepare(class_hash, @calldata).unwrap();
 
-assert(*retdeploy.at(0_u32) != 0, 'deployment failed!')
+let deployed_contract_address = deploy(prepared_result).unwrap();
+invoke(class_hash, 'deploy_factory', @calldata).unwrap();
+assert(deployed_contract_address != 0, 'deployed_contract_address != 0');
+
 }

@@ -12,7 +12,10 @@ use starknet::class_hash:: class_hash_to_felt252;
 use core::hash::LegacyHashFelt252;
 use starknet::contract_address::contract_address_to_felt252;
 use core::result::Result;
-
+use array::SpanTrait;
+use serde::Serde;
+use serde::serialize_array_helper;
+use serde::deserialize_array_helper;
 
 
 // define class Hash as a constant i.e const class_hash = 0x4fe....
@@ -27,6 +30,19 @@ let result = deploy_syscall(class_hash, salt, calldata,true);
     match result {
     Result::Ok((contract_address, _)) => contract_address,
     Result::Err(err) => panic_with_felt252('failed_to_deploy'),
+    }
+}
+
+impl SpanSerde<T, impl TSerde: Serde<T>, impl TDrop: Drop<T>> of Serde<Span<T>> {
+    fn serialize(self: @Span<T>, ref output: Array<felt252>) {
+        (*self).len().serialize(ref output);
+        serialize_array_helper(*self, ref output)
+    }
+
+    fn deserialize(ref serialized: Span<felt252>) -> Option<Span<T>> {
+        let length = *serialized.pop_front()?;
+        let mut arr = ArrayTrait::new();
+        Option::Some(deserialize_array_helper(ref serialized, arr, length)?.span())
     }
 }
 
