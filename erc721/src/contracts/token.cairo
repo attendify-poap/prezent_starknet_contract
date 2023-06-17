@@ -1,20 +1,36 @@
+use starknet::ContractAddress;
+////////////////////////
+// IERC721 interface
+///////////////////////
+#[abi]
+trait IERC721{
+fn name() -> felt252;
+fn symbol() -> felt252;
+fn token_uri(token_id:u256) -> felt252;
+fn balance_of(account:ContractAddress) ->u256;
+fn owner_of(token_id:u256) -> ContractAddress;
+
+}
+
+
+// const IERC165_ID: u32 = 0x01ffc9a7_u32;
+// const INVALID_ID: u32 = 0xffffffff_u32;
+// const IERC721_ID: u32 = 0x80ac58cd_u32;
+// const IERC721_METADATA_ID: u32 = 0x5b5e139f_u32;
+
 const IERC165_ID: u32 = 0x01ffc9a7_u32;
 const INVALID_ID: u32 = 0xffffffff_u32;
 const IERC721_ID: u32 = 0x80ac58cd_u32;
 const IERC721_METADATA_ID: u32 = 0x5b5e139f_u32;
 
-
 // note: contract did not implement some functionalities such as transfer, approve as token is meant to be soulbound.
 
 #[contract]
 mod ERC721{
-
-
     /////////////////////
     // Module Imports
     ///////////////////
-    use prezent_contract_starknet::interface::IERC721;
-
+    // use erc721::interface::IERC721;
     ////////////////////
     // Others
     ///////////////////
@@ -49,7 +65,7 @@ mod ERC721{
     /////////////////////
     // IERC721 implementation
     ////////////////////
-    impl ERC721Impl of IERC721{
+    impl ERC721Impl of super::IERC721{
         fn name() -> felt252{
         return _name::read();
         }
@@ -91,13 +107,17 @@ mod ERC721{
 
     #[view]
     fn eventUri() -> felt252{
-   return  _event_uri::read();
+    return  _event_uri::read();
     }
 
     #[view]
-
     fn creator() -> ContractAddress{
     return _creator::read();
+    }
+
+    #[view]
+    fn get_claimed_status(account: ContractAddress) -> bool{
+    return _hasClaimed::read(account);
     }
 
     #[view]
@@ -112,7 +132,6 @@ mod ERC721{
     }
 
     #[view]
-
     fn supports_interface(interface_id:u32) -> bool{
     return _supported_interfaces::read(interface_id);
     }
@@ -157,11 +176,11 @@ mod ERC721{
 
      #[internal]
     fn initializer(name_: felt252, symbol_: felt252, event_uri_:felt252,creator_:ContractAddress, prezent_mint_limit:u256) {
-        let caller = get_caller_address();
+        // let caller = get_caller_address();
         _name::write(name_);
         _symbol::write(symbol_);
         _event_uri::write(event_uri_);
-        _creator::write(caller);
+        _creator::write(creator_);
         _prezent_mint_limit::write(prezent_mint_limit);
         register_interface(super::IERC721_ID);
         register_interface(super::IERC721_METADATA_ID);
@@ -229,16 +248,13 @@ mod ERC721{
     }
 
     #[external]
-    fn claimPrezent(){
-    let msgSender = get_caller_address();
-    assert(!msgSender.is_zero(), 'CALLER_ZERO_ADDRESS');
-    assert(_hasClaimed::read(msgSender) == false, 'ALREADY CLAIM');
-    safemint(msgSender);
-    _hasClaimed::write(msgSender, true);
+    fn claimPrezent(account:ContractAddress){
+    // let msgSender = get_caller_address();
+    assert(!account.is_zero(), 'CALLER_ZERO_ADDRESS');
+    assert(_hasClaimed::read(account) == false, 'ALREADY CLAIM');
+    safemint(account);
+    _hasClaimed::write(account, true);
     }
-
-
-
 
 
 }

@@ -2,5 +2,6 @@
 protostar-version = "0.13.0"
 
 [contracts]
-prezent_contract_starknet = ["src"]
+token =   ["erc721/src"]
+deployer = ["factory/src"]
 

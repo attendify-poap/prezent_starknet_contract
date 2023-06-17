@@ -5,7 +5,13 @@ version = "0.1.0"
 [dependencies]
 starknet = ">=1.0.0"
 
-[scripts]
+erc721 = { path = "erc721" }
+factory = { path = "factory" }
 
+
+[[target.starknet-contract]]
+
+[scripts]
 build = "protostar build"
 test= "protostar test"
+

@@ -1,3 +1,8 @@
+#[contract]
+
+
+mod PrezentFactory{
+
 use starknet::syscalls::deploy_syscall;
 use starknet::contract_address::ContractAddress;
 use array::ArrayTrait;
@@ -23,4 +28,6 @@ let result = deploy_syscall(class_hash, salt, calldata,true);
     Result::Ok((contract_address, _)) => contract_address,
     Result::Err(err) => panic_with_felt252('failed_to_deploy'),
     }
+}
+
 }
