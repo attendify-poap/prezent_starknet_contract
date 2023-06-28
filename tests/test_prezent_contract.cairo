@@ -99,7 +99,7 @@ let class_hash = declare('deployer').unwrap();
 fn test_factory_deploy() {
 let class_hash = setup_declare();
 let mut calldata = ArrayTrait::new();
-let mint_limit = u256 {low: 5, high: 0};
+let mint_limit = u256 {high: 5, low: 0};
 calldata.append(name_deploy);
 calldata.append(symbol_deploy);
 calldata.append(event_uri_deploy);
@@ -107,10 +107,13 @@ calldata.append(user3);
 calldata.append(mint_limit.high.into());
 calldata.append(mint_limit.low.into());
 
-let prepared_result = prepare(class_hash, @calldata).unwrap();
 
-let deployed_contract_address = deploy(prepared_result).unwrap();
-invoke(class_hash, 'deploy_factory', @calldata).unwrap();
-assert(deployed_contract_address != 0, 'deployed_contract_address != 0');
+let prepare_contract = prepare(class_hash, @calldata).unwrap();
+
+assert(prepare_contract.contract_address !=0, 'prepared contract_address != 0');
+
+let deployed_contract_address = deploy(prepare_contract).unwrap();
+
+assert(deployed_contract_address != 0, 'failed to deploy');
 
 }

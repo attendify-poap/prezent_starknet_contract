@@ -1203,6 +1203,20 @@
         }
       ],
       "state_mutability": "external"
+    },
+    {
+      "type": "event",
+      "name": "DeployContract",
+      "inputs": [
+        {
+          "name": "contract_address",
+          "type": "core::starknet::contract_address::ContractAddress"
+        },
+        {
+          "name": "creator",
+          "type": "core::starknet::contract_address::ContractAddress"
+        }
+      ]
     }
   ]
 }

@@ -18,6 +18,9 @@ use serde::serialize_array_helper;
 use serde::deserialize_array_helper;
 
 
+#[event]
+fn DeployContract(contract_address:ContractAddress, creator:ContractAddress){}
+
 // define class Hash as a constant i.e const class_hash = 0x4fe....
 #[external]
 fn deploy_factory(class_hash:ClassHash, calldata:Span<felt252>)-> ContractAddress{
