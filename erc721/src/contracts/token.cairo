@@ -36,6 +36,7 @@ mod ERC721{
     ///////////////////
     use starknet::ContractAddress;
     use starknet::get_caller_address;
+    use starknet::get_contract_address;
     use zeroable::Zeroable;
     use option::OptionTrait;
     use array::SpanTrait;
@@ -52,16 +53,19 @@ mod ERC721{
     _owners: LegacyMap::<u256, ContractAddress>,
     _balances: LegacyMap::<ContractAddress, u256>,
     _tokenId:u256,
-    _hasClaimed:LegacyMap::<ContractAddress, bool>,
     _token_uri: LegacyMap::<u256, felt252>,
     _current_prezent_amount:u256,
     _prezent_mint_limit:u256,
     _supported_interfaces:LegacyMap<u32,bool>,
     }
 
-   #[event]
+    #[event]
     fn Transfer(from: ContractAddress, to: ContractAddress, token_id: u256) {}
+   #[event]
+    fn MintedPrezent(prezent_collector: ContractAddress, event_uri: felt252, token_id: u256) {}
 
+    #[event]
+    fn EventCreated(event_name: felt252, event_symbol: felt252, event_uri:felt252, event_creator:ContractAddress, _prezent_mint_limit:u256, organizer:felt252, date:felt252, venue:felt252, category:felt252, link:felt252, contract_address:ContractAddress){}
     /////////////////////
     // IERC721 implementation
     ////////////////////
@@ -81,7 +85,7 @@ mod ERC721{
         
         fn balance_of(account:ContractAddress) -> u256{
         assert(!account.is_zero(), 'ERC721:invalid account');
-       return _balances::read(account);
+        return _balances::read(account);
         }
 
          fn owner_of(token_id: u256) -> ContractAddress {
@@ -92,12 +96,12 @@ mod ERC721{
     }
 
 
-    ////////////////
     // initialize contract state
     //////////////
-     #[constructor]
-    fn constructor(name: felt252, symbol: felt252, event_uri:felt252, creator:ContractAddress, _prezent_mint_limit:u256) {
-        initializer(name, symbol, event_uri, creator, _prezent_mint_limit);
+
+    #[constructor]
+    fn constructor(name: felt252, symbol: felt252, event_uri:felt252, _prezent_mint_limit:u256, organizer:felt252, date:felt252, venue:felt252, category:felt252, link:felt252) {
+        initializer(name, symbol, event_uri, _prezent_mint_limit,organizer, date, venue, category, link);
     }
 
 
@@ -113,11 +117,6 @@ mod ERC721{
     #[view]
     fn creator() -> ContractAddress{
     return _creator::read();
-    }
-
-    #[view]
-    fn get_claimed_status(account: ContractAddress) -> bool{
-    return _hasClaimed::read(account);
     }
 
     #[view]
@@ -175,15 +174,18 @@ mod ERC721{
      }
 
      #[internal]
-    fn initializer(name_: felt252, symbol_: felt252, event_uri_:felt252,creator_:ContractAddress, prezent_mint_limit:u256) {
-        // let caller = get_caller_address();
+    fn initializer(name_: felt252, symbol_: felt252, event_uri_:felt252, prezent_mint_limit:u256,organizer:felt252, date:felt252, venue:felt252, category:felt252, link:felt252) -> ContractAddress {
+        let creator = get_caller_address();
+        let contract = get_contract_address();
         _name::write(name_);
         _symbol::write(symbol_);
         _event_uri::write(event_uri_);
-        _creator::write(creator_);
+        _creator::write(creator);
         _prezent_mint_limit::write(prezent_mint_limit);
         register_interface(super::IERC721_ID);
         register_interface(super::IERC721_METADATA_ID);
+        EventCreated(name_, symbol_, event_uri_, creator, prezent_mint_limit, organizer, date, venue, category, link, contract);
+        return contract;
     }
 
      #[internal]
@@ -199,13 +201,10 @@ mod ERC721{
     fn _mint(to: ContractAddress, token_id: u256) {
         assert(!to.is_zero(), 'ERC721: invalid receiver');
         assert(!_exists(token_id), 'ERC721: token already minted');
-
         // Update balances
         _balances::write(to, _balances::read(to) + 1.into());
-
         // Update token_id owner
         _owners::write(token_id, to);
-
         // Emit event
         Transfer(Zeroable::zero(), to, token_id);
     }
@@ -233,27 +232,27 @@ mod ERC721{
         _supported_interfaces::write(interface_id, false);
     }
 
-    #[external]
+    #[internal]
     fn safemint(to: ContractAddress) {
     assert(_current_prezent_amount::read() <= _prezent_mint_limit::read(), 'ERC721: Mint limit reached');
     let prev_prezent_amount:u256 = _current_prezent_amount::read();
     let prevTokenId:u256 = _tokenId::read();
     let token_id:u256 = prevTokenId + 1.into();
-    let token_uri = _token_uri::read(token_id);
+    let token_uri = _event_uri::read();
     let latest_prezent_amount:u256 = prev_prezent_amount + 1.into();
         _safe_mint(to, token_id);
         _set_token_uri(token_id, token_uri);
         _tokenId::write(token_id);
         _current_prezent_amount::write(latest_prezent_amount);
+        MintedPrezent(to, token_uri, token_id);
     }
 
     #[external]
-    fn claimPrezent(account:ContractAddress){
-    // let msgSender = get_caller_address();
-    assert(!account.is_zero(), 'CALLER_ZERO_ADDRESS');
-    assert(_hasClaimed::read(account) == false, 'ALREADY CLAIM');
-    safemint(account);
-    _hasClaimed::write(account, true);
+    fn claimPrezent() -> bool{
+    let caller = get_caller_address();
+    assert(!caller.is_zero(), 'CALLER_ZERO_ADDRESS');
+    safemint(caller);
+    return true;
     }
 
 
